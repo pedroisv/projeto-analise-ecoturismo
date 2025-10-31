@@ -6,10 +6,15 @@ As análises foram realizadas inteiramente em **PostgreSQL**, utilizando consult
 
 #### **Estrutura do projeto**
 
-* `queries_eco_viagens.sql` — arquivo contendo todas as consultas SQL divididas por tema (receita, clientes, ofertas, sustentabilidade e desempenho dos operadores).
+* `queires-projeto-analise-ecoturismo.sql` — arquivo contendo todas as consultas SQL divididas por tema (receita, clientes, ofertas, sustentabilidade e desempenho dos operadores).
 
 #### **Tecnologia utilizada**
 
 * PostgreSQL (SQL)
+
+#### **Link para o projeto completo**
+
+A documentação detalhada do projeto está disponível no Notion:  
+[Link para a documentação no Notion](https://pedroisv-portifolio.notion.site/An-lise-de-Ecoturismo-294ff4051196801b83ffd6a6200d9c0f)
 
 📄 **Desenvolvido por [Pedro Ivo Sales Vieira]**

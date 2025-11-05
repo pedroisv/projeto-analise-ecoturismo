@@ -47,36 +47,37 @@ GROUP BY tipo_oferta, total_oferta                   -- agrupa por tipo de ofert
 
 
 -- 4.Qual a taxa de repeticao de clientes
--- CTE que calcula o numero total de clientes unicos com reservas concluidas
-WITH total_clientes as (
-	SELECT DISTINCT
-		COUNT(id_cliente) as total_clientes -- calcula o numero total de clientes unicos
-	FROM reservas
-	WHERE status = 'concluída'              -- filtro para as reservas concluidas
+-- CTE 1: identifica clientes que compraram novamente
+WITH comprou_novamente AS (
+  SELECT
+    id_cliente,                                     -- identifica o cliente
+    -- classifica se o cliente fez mais de uma reserva concluída
+    CASE 
+      WHEN COUNT(*) > 1 THEN 'SIM'                  -- se o cliente tem mais de uma reserva concluída
+      ELSE 'NAO'                                   -- se o cliente tem apenas uma reserva concluída
+    END AS comprou_dnv
+  FROM reservas
+  WHERE status = 'concluída'                       -- considera apenas reservas concluídas
+  GROUP BY id_cliente                              -- agrupa por cliente (cada cliente será uma linha)
 ),
--- CTE que identifica quais clientes fizeram mais de uma reserva
-comprou_novamente as(
-	SELECT
-		id_cliente,
-		-- classifica cada cliente como SIM ou NAO para compras repetidas
-		CASE
-			WHEN COUNT(id_reserva) > 1 THEN 'SIM' -- clientes com mais de uma reserva
-			ELSE 'NAO'                            -- clientes com uma reserva 
-		END as comprou_dnv
-	FROM reservas
-	WHERE status = 'concluída'      -- filtro para as reservas concluidas 
-	GROUP BY id_cliente             -- agrupa por cliente   
+-- CTE 2: calcula o total de clientes únicos com reservas concluídas
+total_clientes AS (
+  SELECT 
+    COUNT(DISTINCT id_cliente) AS total_clientes   -- conta quantos clientes únicos concluíram pelo menos uma reserva
+  FROM reservas
+  WHERE status = 'concluída'                       -- mesmo filtro para manter consistência
 )
--- Calcula a quantidade e porcentagem de clientes por categoria de repeticao
+-- Query principal: calcula quantidade e porcentagem de clientes por categoria
 SELECT
-	comprou_dnv,
-	COUNT(comprou_dnv) as qtd_clientes,  -- conta clientes em cada categoria
-	total_clientes,
-	-- calcula o percentual de cada categoria, baseado no total de clientes da CTE
-	ROUND((COUNT(comprou_dnv) * 1.0) / (total_clientes * 1.0)  * 100 ,2) as porcentagem
-FROM comprou_novamente
-CROSS JOIN total_clientes               -- une com a CTE total_clientes
-GROUP BY comprou_dnv, total_clientes    -- agrupa por categoria de repeticao
+  c.comprou_dnv,                                   -- 'SIM' ou 'NAO' (se repetiu a compra)
+  COUNT(*) AS qtd_clientes,                        -- quantos clientes estão em cada grupo ('SIM' ou 'NAO')
+  t.total_clientes,                                -- total de clientes (valor único vindo da CTE total_clientes)
+  -- calcula o percentual de cada grupo sobre o total de clientes
+  ROUND( (COUNT(*)::numeric / t.total_clientes) * 100, 2) AS porcentagem
+
+FROM comprou_novamente c
+CROSS JOIN total_clientes t                        -- junta o total (única linha) a todas as linhas de comprou_novamente
+GROUP BY c.comprou_dnv, t.total_clientes;          -- agrupa por tipo de cliente e total (necessário para agregações)
 
 
 
